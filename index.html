@@ -12,10 +12,15 @@
 <body>
     <div class="app-container">
         <header class="header">
-            <button class="header-btn" data-key="undo">UNDO</button>
-            <button class="header-btn" data-key="redo">REDO</button>
-            <button class="header-btn" data-key="copy">COPY</button>
-            <button class="header-btn" data-key="download">DOWNLOAD</button>
+            <div class="header-group">
+                <button class="header-btn" data-key="undo">UNDO</button>
+                <button class="header-btn" data-key="redo">REDO</button>
+            </div>
+            <div class="header-group">
+                <button class="header-btn" data-key="copy">COPY</button>
+                <button class="header-btn header-download-btn" data-key="download-txt">DL .TXT</button>
+                <button class="header-btn header-download-btn" data-key="download-doc">DL .DOC</button>
+            </div>
         </header>
 
         <main class="display-container" id="displayContainer">
@@ -23,7 +28,7 @@
         </main>
 
         <footer class="keyboard">
-            <button class="key key-function" data-key="c">C</button>
+            <button class="key key-clear" data-key="backspace">C</button> <!-- CHANGED: data-key is now backspace -->
             <button class="key key-function" data-key="(">(</button>
             <button class="key key-function" data-key=")">)</button>
             <button class="key key-function" data-key="backspace">
