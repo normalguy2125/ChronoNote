@@ -21,11 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
     };
 
-    const handleInput = (key, element) => {
+    // Main function for keyboard and tap-to-clear inputs
+    const handleInput = (key) => {
         let newContent = content;
         const currentLine = content.split('\n').pop();
         const lastTimestamp = currentLine.split(/[,+-]/).pop();
 
+        // Context-Aware Logic
         if (key === ':' && !/^\(\d{2}$/.test(lastTimestamp)) return;
         if (key === ')' && !/:(\d{1,2})$/.test(lastTimestamp)) return;
         if (['+', '-', ','].includes(key) && !/\)$/.test(currentLine)) return;
@@ -34,31 +36,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         switch (key) {
             case 'backspace':
-                if (content.length > 4) {
-                    newContent = content.slice(0, -1);
-                }
+                if (content.length > 4) { newContent = content.slice(0, -1); }
                 break;
-            case 'undo':
-            case 'redo':
-                handleHistory(key);
-                return;
-            case 'copy':
-                handleCopy(element);
-                return;
-            case 'download-txt':
-                downloadNotes('txt');
-                return;
-            case 'download-doc':
-                downloadNotes('doc');
-                return;
             case 'enter':
                 handleEnter();
-                return;
+                return; // Return because handleEnter calls updateState itself
             case 'ok':
                 handleOK();
-                return;
+                return; // Return because handleOK calls updateState itself
             case ')':
-                if (/:(\d)$/.test(lastTimestamp)) {
+                if (/:(\d)$/.test(lastTimestamp)) { // Smart Pad
                     newContent = content.slice(0, -1) + '0' + content.slice(-1) + ')';
                 } else {
                     newContent += ')';
@@ -68,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 newContent += key;
         }
 
+        // Automatic Formatting
         const updatedLine = newContent.split('\n').pop();
         const updatedTimestamp = updatedLine.split(/[,+-]/).pop();
 
@@ -80,14 +68,20 @@ document.addEventListener('DOMContentLoaded', () => {
         updateState(newContent);
     };
     
-    const handleHistory = (key) => {
-        if (key === 'undo' && historyIndex > 0) {
-            historyIndex--;
-        } else if (key === 'redo' && historyIndex < history.length - 1) {
-            historyIndex++;
+    // Handles special header buttons
+    const handleHeaderAction = (key, element) => {
+        if (key === 'undo' || key === 'redo') {
+            if (key === 'undo' && historyIndex > 0) historyIndex--;
+            else if (key === 'redo' && historyIndex < history.length - 1) historyIndex++;
+            content = history[historyIndex];
+            render();
+        } else if (key === 'copy') {
+            handleCopy(element);
+        } else if (key === 'download-txt') {
+            downloadNotes('txt');
+        } else if (key === 'download-doc') {
+            downloadNotes('doc');
         }
-        content = history[historyIndex];
-        render();
     };
 
     const handleEnter = () => {
@@ -105,7 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentLineNum = parseInt(currentNumberLine || '0');
         const cleanedContent = getCleanedContent();
         const nextLineNum = currentLineNum + 1;
-        // ADDED EXTRA \n FOR SPACING
         updateState(`${cleanedContent}\n\n${nextLineNum})\n(`);
     };
     
@@ -124,8 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const getCleanedContent = () => {
         let cleaned = content;
-        // BUG FIX: Replaced faulty regex to correctly finalize the line
-        cleaned = cleaned.replace(/(\(\d{2}:\d{2}))[,+-]\($/, '$1)');
+        cleaned = cleaned.replace(/(\(\d{2}:\d{2})\)[,+-]\($/, '$1)'); // Fixes double parenthesis bug
         cleaned = cleaned.replace(/:(\d)$/, ':0$1)');
         return cleaned;
     };
@@ -153,27 +145,18 @@ document.addEventListener('DOMContentLoaded', () => {
         URL.revokeObjectURL(url);
     };
 
+    // --- Event Listeners ---
     keyboard.addEventListener('click', (e) => {
         const keyButton = e.target.closest('.key');
-        if (keyButton) handleInput(keyButton.dataset.key, keyButton);
+        if (keyButton) handleInput(keyButton.dataset.key);
     });
 
     header.addEventListener('click', (e) => {
         const headerButton = e.target.closest('.header-btn');
-        if (headerButton) handleInput(headerButton.dataset.key, headerButton);
+        if (headerButton) handleHeaderAction(headerButton.dataset.key, headerButton);
     });
     
     displayContainer.addEventListener('click', () => handleInput('backspace'));
 
     render();
 });
-const handleCopy = (element) => {
-    navigator.clipboard.writeText(getCleanedContent());
-    const originalText = element.textContent;
-    element.textContent = 'COPIED!'; // <-- LOOK FOR THIS LINE
-    element.style.color = '#4CAF50';
-    setTimeout(() => {
-        element.textContent = originalText;
-        element.style.color = '';
-    }, 1500);
-};
