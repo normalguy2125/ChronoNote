@@ -95,17 +95,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleEnter = () => {
         const lines = content.split('\n');
-        const currentLine = lines.pop();
-        const currentLineNum = parseInt(lines[lines.length - 2] || '0');
-
-        if (currentLine === '(') { // Deleting an empty new line
-            if (lines.length > 1) {
-                updateState(lines.slice(0, -1).join('\n'));
+        const currentDataLine = lines.pop(); // This is the line with the timestamp data
+        const currentNumberLine = lines.pop(); // This is the line with the number, e.g., "1)"
+        
+        if (currentDataLine === '(') { // Deleting an empty new line
+            if (lines.length > 0) {
+                updateState(lines.join('\n'));
             }
             return;
         }
-
-        let cleanedContent = getCleanedContent();
+        
+        const currentLineNum = parseInt(currentNumberLine || '0'); // Get the number from "1)"
+        const cleanedContent = getCleanedContent();
         const nextLineNum = currentLineNum + 1;
         updateState(`${cleanedContent}\n${nextLineNum})\n(`);
     };
