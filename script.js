@@ -167,3 +167,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     render();
 });
+const handleCopy = (element) => {
+    navigator.clipboard.writeText(getCleanedContent());
+    const originalText = element.textContent;
+    element.textContent = 'COPIED!'; // <-- LOOK FOR THIS LINE
+    element.style.color = '#4CAF50';
+    setTimeout(() => {
+        element.textContent = originalText;
+        element.style.color = '';
+    }, 1500);
+};
