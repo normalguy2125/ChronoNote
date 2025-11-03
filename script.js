@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const render = () => {
         display.innerHTML = `${content.replace(/\n/g, '<br>')}<span class="cursor"></span>`;
-        // Scroll to the bottom to keep the cursor in view
         displayContainer.scrollTop = displayContainer.scrollHeight;
     };
 
@@ -22,12 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
     };
 
-    const handleInput = (key) => {
+    const handleInput = (key, element) => {
         let newContent = content;
         const currentLine = content.split('\n').pop();
         const lastTimestamp = currentLine.split(/[,+-]/).pop();
 
-        // --- Context-Aware Logic ---
         if (key === ':' && !/^\(\d{2}$/.test(lastTimestamp)) return;
         if (key === ')' && !/:(\d{1,2})$/.test(lastTimestamp)) return;
         if (['+', '-', ','].includes(key) && !/\)$/.test(currentLine)) return;
@@ -35,33 +33,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (['+', '-', 'ok'].includes(key) && /[,+-]\($|\($/.test(currentLine)) return;
 
         switch (key) {
-            case 'c':
-                newContent = content.substring(0, content.lastIndexOf('\n') + 1) + '(';
-                break;
             case 'backspace':
-                if (content.length > 4) { // Prevent deleting the initial "1)\n("
+                if (content.length > 4) {
                     newContent = content.slice(0, -1);
                 }
                 break;
             case 'undo':
-                if (historyIndex > 0) {
-                    historyIndex--;
-                    content = history[historyIndex];
-                    render();
-                }
-                return;
             case 'redo':
-                if (historyIndex < history.length - 1) {
-                    historyIndex++;
-                    content = history[historyIndex];
-                    render();
-                }
+                handleHistory(key);
                 return;
             case 'copy':
-                navigator.clipboard.writeText(getCleanedContent());
+                handleCopy(element);
                 return;
-            case 'download':
-                downloadNotes();
+            case 'download-txt':
+                downloadNotes('txt');
+                return;
+            case 'download-doc':
+                downloadNotes('doc');
                 return;
             case 'enter':
                 handleEnter();
@@ -70,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleOK();
                 return;
             case ')':
-                 if(/:(\d)$/.test(lastTimestamp)) { // Smart Pad
+                if (/:(\d)$/.test(lastTimestamp)) {
                     newContent = content.slice(0, -1) + '0' + content.slice(-1) + ')';
                 } else {
                     newContent += ')';
@@ -80,7 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 newContent += key;
         }
 
-        // --- Automatic Formatting ---
         const updatedLine = newContent.split('\n').pop();
         const updatedTimestamp = updatedLine.split(/[,+-]/).pop();
 
@@ -92,23 +79,34 @@ document.addEventListener('DOMContentLoaded', () => {
         
         updateState(newContent);
     };
+    
+    const handleHistory = (key) => {
+        if (key === 'undo' && historyIndex > 0) {
+            historyIndex--;
+        } else if (key === 'redo' && historyIndex < history.length - 1) {
+            historyIndex++;
+        }
+        content = history[historyIndex];
+        render();
+    };
 
     const handleEnter = () => {
         const lines = content.split('\n');
-        const currentDataLine = lines.pop(); // This is the line with the timestamp data
-        const currentNumberLine = lines.pop(); // This is the line with the number, e.g., "1)"
+        const currentDataLine = lines.pop();
+        const currentNumberLine = lines.pop();
         
-        if (currentDataLine === '(') { // Deleting an empty new line
+        if (currentDataLine === '(') {
             if (lines.length > 0) {
                 updateState(lines.join('\n'));
             }
             return;
         }
         
-        const currentLineNum = parseInt(currentNumberLine || '0'); // Get the number from "1)"
+        const currentLineNum = parseInt(currentNumberLine || '0');
         const cleanedContent = getCleanedContent();
         const nextLineNum = currentLineNum + 1;
-        updateState(`${cleanedContent}\n${nextLineNum})\n(`);
+        // ADDED EXTRA \n FOR SPACING
+        updateState(`${cleanedContent}\n\n${nextLineNum})\n(`);
     };
     
     const handleOK = () => {
@@ -116,9 +114,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const lastTimestamp = currentLine.split(/[,+-]/).pop();
         let newContent = content;
         
-        if (/^\((\d)$/.test(lastTimestamp)) { // Pad mm
+        if (/^\((\d)$/.test(lastTimestamp)) {
             newContent = content.slice(0, -1) + '0' + content.slice(-1) + ':';
-        } else if (/:(\d)$/.test(lastTimestamp)) { // Pad ss
+        } else if (/:(\d)$/.test(lastTimestamp)) {
             newContent = content.slice(0, -1) + '0' + content.slice(-1) + '),(';
         }
         updateState(newContent);
@@ -126,42 +124,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const getCleanedContent = () => {
         let cleaned = content;
-        // Remove trailing connector e.g., "),(", "+(", "-("
-        cleaned = cleaned.replace(/[,+-]\($/, ')');
-        // Pad and close single digit ss e.g., "(01:2" -> "(01:02)"
+        // BUG FIX: Replaced faulty regex to correctly finalize the line
+        cleaned = cleaned.replace(/(\(\d{2}:\d{2}))[,+-]\($/, '$1)');
         cleaned = cleaned.replace(/:(\d)$/, ':0$1)');
         return cleaned;
     };
     
-    const downloadNotes = () => {
+    const handleCopy = (element) => {
+        navigator.clipboard.writeText(getCleanedContent());
+        const originalText = element.textContent;
+        element.textContent = 'COPIED!';
+        element.style.color = '#4CAF50';
+        setTimeout(() => {
+            element.textContent = originalText;
+            element.style.color = '';
+        }, 1500);
+    };
+
+    const downloadNotes = (format) => {
         const textToSave = getCleanedContent();
         const blob = new Blob([textToSave], { type: "text/plain" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         const date = new Date().toISOString().slice(0, 10);
         a.href = url;
-        a.download = `timenotes_${date}.txt`;
+        a.download = `timenotes_${date}.${format}`;
         a.click();
         URL.revokeObjectURL(url);
     };
 
     keyboard.addEventListener('click', (e) => {
         const keyButton = e.target.closest('.key');
-        if (keyButton) {
-            handleInput(keyButton.dataset.key);
-        }
+        if (keyButton) handleInput(keyButton.dataset.key, keyButton);
     });
 
     header.addEventListener('click', (e) => {
         const headerButton = e.target.closest('.header-btn');
-        if (headerButton) {
-            handleInput(headerButton.dataset.key);
-        }
+        if (headerButton) handleInput(headerButton.dataset.key, headerButton);
     });
     
-    displayContainer.addEventListener('click', () => {
-        handleInput('backspace');
-    });
+    displayContainer.addEventListener('click', () => handleInput('backspace'));
 
     render();
 });
