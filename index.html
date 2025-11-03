@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Time Note</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <button class="header-btn" data-key="undo">UNDO</button>
+            <button class="header-btn" data-key="redo">REDO</button>
+            <button class="header-btn" data-key="copy">COPY</button>
+            <button class="header-btn" data-key="download">DOWNLOAD</button>
+        </header>
+
+        <main class="display-container" id="displayContainer">
+            <pre class="display" id="display"></pre>
+        </main>
+
+        <footer class="keyboard">
+            <button class="key key-function" data-key="c">C</button>
+            <button class="key key-function" data-key="(">(</button>
+            <button class="key key-function" data-key=")">)</button>
+            <button class="key key-function" data-key="backspace">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M21 11H6.83l3.58-3.59L9 6l-6 6 6 6 1.41-1.41L6.83 13H21v-2z"/>
+                </svg>
+            </button>
+
+            <button class="key key-number" data-key="7">7</button>
+            <button class="key key-number" data-key="8">8</button>
+            <button class="key key-number" data-key="9">9</button>
+            <button class="key key-function" data-key=":">:</button>
+
+            <button class="key key-number" data-key="4">4</button>
+            <button class="key key-number" data-key="5">5</button>
+            <button class="key key-number" data-key="6">6</button>
+            <button class="key key-function" data-key="+">+</button>
+
+            <button class="key key-number" data-key="1">1</button>
+            <button class="key key-number" data-key="2">2</button>
+            <button class="key key-number" data-key="3">3</button>
+            <button class="key key-function" data-key="-">-</button>
+            
+            <button class="key key-number" data-key="0">0</button>
+            <button class="key key-number" data-key=",">,</button>
+            <button class="key key-function" data-key="ok">OK</button>
+            <button class="key key-enter" data-key="enter">ENTER</button>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
