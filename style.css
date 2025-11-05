@@ -127,9 +127,11 @@ html, body {
 .key-number { background-color: var(--key-number-bg); }
 .key-function { background-color: var(--key-function-bg); }
 .key-enter { background-color: var(--key-enter-bg); }
-.key-clear { background-color: var(--key-clear-bg); } /* Red button style */
+.key-clear { background-color: var(--key-clear-bg); }
 
 .key svg {
     width: 32px;
     height: 32px;
+    /* --- THIS IS THE FIX --- */
+    pointer-events: none; /* This makes the icon ignore clicks */
 }
