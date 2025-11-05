@@ -7,31 +7,51 @@ document.addEventListener('DOMContentLoaded', () => {
     let content = "1)\n(";
     let history = [content];
     let historyIndex = 0;
+    let lastClearPressTime = 0; // For tracking double-press
 
     const render = () => {
         display.innerHTML = `${content.replace(/\n/g, '<br>')}<span class="cursor"></span>`;
         displayContainer.scrollTop = displayContainer.scrollHeight;
     };
 
-    const updateState = (newContent) => {
+    const updateState = (newContent, resetHistory = false) => {
         content = newContent;
-        history = history.slice(0, historyIndex + 1);
-        history.push(content);
-        historyIndex++;
+        if (resetHistory) {
+            history = [content];
+            historyIndex = 0;
+        } else {
+            history = history.slice(0, historyIndex + 1);
+            history.push(content);
+            historyIndex++;
+        }
         render();
     };
 
     const handleInput = (key) => {
-        // --- THIS IS THE CRUCIAL FIX ---
         // Handle special state-changing keys FIRST.
         if (key === '+' || key === '-') {
             if (content.endsWith('),(')) {
                 const newContent = content.slice(0, -2) + key + '(';
                 updateState(newContent);
             }
-            return; // <- This is the key. Stop processing here.
+            return;
         }
 
+        // --- RE-IMPLEMENTED C BUTTON LOGIC ---
+        if (key === 'c') {
+            const now = Date.now();
+            if (now - lastClearPressTime < 500) { // Double press
+                updateState("1)\n(", true); // Clear all and reset history
+            } else { // Single press
+                const lines = content.split('\n');
+                lines.pop(); // Remove current data line
+                const newContent = lines.join('\n') + '\n(';
+                updateState(newContent);
+            }
+            lastClearPressTime = now;
+            return;
+        }
+        
         let newContent = content;
         const currentLine = content.split('\n').pop();
         const lastTimestamp = currentLine.split(/[,+-]/).pop();
