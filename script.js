@@ -156,7 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (headerButton) handleHeaderAction(headerButton.dataset.key, headerButton);
     });
     
-    displayContainer.addEventListener('click', () => handleInput('backspace'));
+    // The C button is the first key in the keyboard, and it's mapped to 'backspace' in the HTML
+    // The tap-to-clear functionality is now handled by the 'backspace' key in the keyboard
+    // The displayContainer click listener is removed as it was causing confusion with the C button
 
     render();
 });
